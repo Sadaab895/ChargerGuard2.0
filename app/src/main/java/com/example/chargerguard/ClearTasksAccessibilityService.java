@@ -1,35 +1,65 @@
 package com.example.chargerguard;
 
 import android.accessibilityservice.AccessibilityService;
+import android.os.Handler;
 import android.view.accessibility.AccessibilityEvent;
+import android.view.accessibility.AccessibilityNodeInfo;
+import java.util.List;
 
 public class ClearTasksAccessibilityService extends AccessibilityService {
 
-    // Yeh method tab call hogi jab koi screen event ho
+    public static ClearTasksAccessibilityService instance;
+
     @Override
-    public void onAccessibilityEvent(AccessibilityEvent event) {
-        // Abhi koi action nahi chahiye yahan
+    public void onServiceConnected() {
+        instance = this;
     }
 
     @Override
-    public void onInterrupt() {
-        // Service interrupt hone par
+    public void onAccessibilityEvent(AccessibilityEvent event) {}
+
+    @Override
+    public void onInterrupt() {}
+
+    public static void clearAllApps() {
+        if (instance == null) return;
+
+        // Step 1: Recents screen kholo
+        instance.performGlobalAction(GLOBAL_ACTION_RECENTS);
+
+        // Step 2: 1.5 second baad Clear All button dhundho
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                clickClearAll();
+            }
+        }, 1500);
     }
 
-    // Recents screen kholke sab apps clear karna
-    public static void clearAllRecentApps(AccessibilityService service) {
-        // Recents button press karo
-        service.performGlobalAction(GLOBAL_ACTION_RECENTS);
+    private static void clickClearAll() {
+        if (instance == null) return;
 
-        // Thoda wait karo (1 second)
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+        AccessibilityNodeInfo root = instance.getRootInActiveWindow();
+        if (root == null) return;
+
+        // Alag alag phones mein alag text hota hai
+        String[] clearTexts = {
+            "Clear All", "CLEAR ALL", "Clear all",
+            "Close All", "CLOSE ALL",
+            "सभी साफ़ करें", "Clear", "CLEAR",
+            "End All", "Remove All"
+        };
+
+        for (String text : clearTexts) {
+            List<AccessibilityNodeInfo> nodes =
+                root.findAccessibilityNodeInfosByText(text);
+            if (nodes != null && !nodes.isEmpty()) {
+                nodes.get(0).performAction(AccessibilityNodeInfo.ACTION_CLICK);
+                return;
+            }
         }
 
-        // "Clear All" button dhundho aur press karo
-        // Note: Yeh different phones par alag alag hota hai
-        // Isliye global action use karte hain
+        // Agar button nahi mila toh swipe karke clear karo
+        instance.performGlobalAction(GLOBAL_ACTION_HOME);
     }
 }
