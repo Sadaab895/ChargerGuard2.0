@@ -4,13 +4,11 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.net.wifi.WifiManager;
-import android.app.ActivityManager;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.os.Build;
 import android.widget.Toast;
 import androidx.core.app.NotificationCompat;
-import java.util.List;
 
 public class ChargerReceiver extends BroadcastReceiver {
 
@@ -30,20 +28,25 @@ public class ChargerReceiver extends BroadcastReceiver {
         showNotification(context,
             "🔋 Charger Connected",
             "WiFi off & background apps clear ho gaye!");
-        Toast.makeText(context, "Charger laga! WiFi off & apps clear!", Toast.LENGTH_LONG).show();
+        Toast.makeText(context,
+            "Charger laga! WiFi off & apps clear!",
+            Toast.LENGTH_LONG).show();
     }
 
     private void handleChargerDisconnected(Context context) {
         showNotification(context,
             "🔌 Charger Removed",
             "Phone normal mode mein aa gaya.");
-        Toast.makeText(context, "Charger hata diya!", Toast.LENGTH_SHORT).show();
+        Toast.makeText(context,
+            "Charger hata diya!",
+            Toast.LENGTH_SHORT).show();
     }
 
     private void turnOffWifi(Context context) {
         try {
-            WifiManager wifiManager = (WifiManager) context.getApplicationContext()
-                .getSystemService(Context.WIFI_SERVICE);
+            WifiManager wifiManager = (WifiManager)
+                context.getApplicationContext()
+                    .getSystemService(Context.WIFI_SERVICE);
             if (wifiManager != null && wifiManager.isWifiEnabled()) {
                 wifiManager.setWifiEnabled(false);
             }
@@ -54,34 +57,16 @@ public class ChargerReceiver extends BroadcastReceiver {
 
     private void clearBackgroundApps(Context context) {
         try {
-            ActivityManager am = (ActivityManager)
-                context.getSystemService(Context.ACTIVITY_SERVICE);
-            if (am == null) return;
-
-            List<ActivityManager.RunningAppProcessInfo> processes =
-                am.getRunningAppProcesses();
-            if (processes == null) return;
-
-            String myPackage = context.getPackageName();
-
-            for (ActivityManager.RunningAppProcessInfo process : processes) {
-                // Skip system and foreground apps
-                if (process.importance >=
-                        ActivityManager.RunningAppProcessInfo.IMPORTANCE_BACKGROUND) {
-                    if (!process.processName.equals(myPackage) &&
-                        !process.processName.equals("android") &&
-                        !process.processName.equals("com.android.systemui") &&
-                        !process.processName.equals("com.android.phone")) {
-                        am.killBackgroundProcesses(process.processName);
-                    }
-                }
+            if (ClearTasksAccessibilityService.instance != null) {
+                ClearTasksAccessibilityService.clearAllApps();
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    private void showNotification(Context context, String title, String message) {
+    private void showNotification(Context context,
+            String title, String message) {
         try {
             NotificationManager nm = (NotificationManager)
                 context.getSystemService(Context.NOTIFICATION_SERVICE);
