@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">ChargerGuard</string>
+    <string name="accessibility_service_description">
+        ChargerGuard background tasks clear karta hai
+    </string>
+</resources>
